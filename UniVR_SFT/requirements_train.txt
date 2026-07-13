@@ -1,0 +1,7 @@
+peft
+datasets
+accelerate
+transformers
+torch
+deepspeed
+wandb

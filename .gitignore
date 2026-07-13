@@ -1,0 +1,7 @@
+UniVR_SFT/weights/
+UniVR_SFT/outputs/
+
+# 敏感信息扫描结果、临时日志，禁止推送
+sensitive_info_result.txt
+opensource_git_commit.log
+*.tmp.log

@@ -1,0 +1,56 @@
+# Unified requirements for UniVR (UniVR_SFT + UniVR_RL).
+# Generated from:
+#   - install.sh
+#   - UniVR_SFT/install.sh (root)
+#   - UniVR_SFT/requirements/{common,transformers,vllm}.txt
+#   - UniVR_SFT/requirements_train.txt
+#   - UniVR_RL/requirements.txt
+#
+# Notes on conflicts (resolved in favor of what the project actually runs):
+#   - transformers: SFT/requirements/transformers.txt says 4.48.2, but install.sh
+#     overrides to 4.57.3; UniVR_RL requires >=4.54.0,<=4.57.0. We pin 4.57.0
+#     (intersection of all constraints; closest to install.sh).
+#   - torch / torchvision / torchaudio versions follow install.sh.
+#   - flash-attn: install.sh uses a specific cu12+torch2.8+cp311 wheel URL.
+#     The pip line below pulls a generic flash-attn; if you want the exact wheel,
+#     prefer the URL in install.sh.
+
+# ---- Core training stack (versions pinned by install.sh) ----
+torch==2.8.0
+torchvision==0.23.0
+torchaudio==2.8.0
+transformers==4.57.0
+accelerate>=0.20.0
+deepspeed
+peft==0.17.1
+datasets
+flash-attn>=2.8.3  # see install.sh for the exact cu12+torch2.8+cp311 wheel URL
+
+# ---- vLLM / inference ----
+vllm==0.11.0; python_version > '3.11'
+
+# ---- RL stack (UniVR_RL) ----
+ray[default]
+tensordict
+torchdata
+liger-kernel
+codetiming
+mathruler
+pylatexenc
+qwen-vl-utils
+
+# ---- Common utils ----
+numpy>=1.21.0
+pillow>=9.0.0
+tqdm>=4.64.0
+protobuf>=3.20.0
+tiktoken>=0.12.0
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+omegaconf==2.3.0
+gradio==5.49.1
+pandas
+pyarrow>=15.0.0
+fastparquet
+loguru
+wandb

@@ -1,0 +1,7 @@
+-r common.txt
+
+
+transformers==4.48.2
+accelerate>=0.20.0
+peft==0.17.1
+deepspeed

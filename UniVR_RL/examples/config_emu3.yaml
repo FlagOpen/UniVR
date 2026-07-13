@@ -1,0 +1,204 @@
+# Copyright 2026 ByteDance and/or its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+data:
+  # ---- Multi-source example (dict format) ----
+  train_files:
+    agibot: ../datasets/VR-X-RL/Agibot
+    egodex: ../datasets/VR-X-RL/EgoDex
+    videocraft: ../datasets/VR-X-RL/VideoCraftBench
+    epic_kitchen: ../datasets/VR-X-RL/Epic_Kitchen
+    zebra_count: ../datasets/VR-X-RL/Zebra_Count
+    zebra_jigsaw: ../datasets/VR-X-RL/Zebra_Jigsaw
+    visual_search: ../datasets/VR-X-RL/Visual_Search
+
+  source_sample_counts:
+    agibot: 500
+    egodex: 300
+    epic_kitchen: 103   # 103 samples, use all
+    videocraft: 51      # 51 samples, use all
+    zebra_count: 500
+    zebra_jigsaw: 200
+    visual_search: 200
+
+
+
+  val_files: ""
+  prompt_key: problem
+  answer_key: answer
+  # For pre-tokenized data, set input_ids_key if your data has it
+  # input_ids_key: input_ids
+  image_key: images    # Not used for Emu3 (images are pre-tokenized)
+  video_key: videos
+  image_dir: null
+  video_fps: 2.0
+  max_prompt_length: 4096
+  max_response_length: 10000  # Must match emu3_max_new_tokens for Emu3 image generation
+  rollout_batch_size: 32  # Must be divisible by world_size (n_gpus * nnodes)
+  mini_rollout_batch_size: null
+  val_batch_size: 32
+  format_prompt: ./examples/format_prompt/emu3.jinja
+  override_chat_template: null
+  shuffle: true
+  seed: 6666
+  min_pixels: null   # Not used for Emu3
+  max_pixels: null   # Not used for Emu3
+  filter_overlong_prompts: false
+  enable_cfg: false
+  interleaved_text: false  # Set true to enable interleaved caption-before-image format in answer sequence
+  
+algorithm:
+  adv_estimator: grpo
+  disable_kl: false
+  use_kl_loss: true
+  kl_penalty: low_var_kl
+  kl_coef: 1.0e-2
+  online_filtering: false
+  filter_key: overall
+  filter_low: 0.01
+  filter_high: 0.99
+
+worker:
+  actor:
+    global_batch_size: 8
+    micro_batch_size_per_device_for_update: 1
+    micro_batch_size_per_device_for_experience: 1
+    max_grad_norm: 1.0
+    padding_free: false  # Disable padding_free for Emu3 (no ulysses patch yet)
+    dynamic_batching: false  # Must be false to ensure consistent sequence lengths across TP workers
+    ulysses_size: 1
+    model:
+      model_path: /path/to/Emu3.5  # Set your Emu3.5 model path
+      tokenizer_path: /path/to/Emu_VW/src/tokenizer_emu3_ibq  # Emu3 tokenizer path
+      enable_gradient_checkpointing: true
+      trust_remote_code: true
+      freeze_vision_tower: false
+    optim:
+      lr: 1.0e-6
+      weight_decay: 1.0e-2
+      strategy: adamw_bf16
+      lr_warmup_ratio: 0.0
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: false
+      enable_rank0_init: true
+      torch_dtype: bf16
+    offload:
+      offload_params: true
+      offload_optimizer: true
+
+  rollout:
+    n: 8
+    temperature: 1.0
+    top_p: 1.0
+    limit_images: 0
+    gpu_memory_utilization: 0.5
+    enforce_eager: false
+    enable_chunked_prefill: false  # Must be false for Emu3
+    tensor_parallel_size: 8
+    disable_tqdm: false
+    max_num_batched_tokens: 104000
+    max_num_seqs: 32  # Emu3 recommends small value
+    max_model_len: 11000
+    
+    # Emu3 CFG (Classifier-Free Guidance) settings
+    # Set emu3_cfg_enabled=true if your task involves image generation
+    # For pure text reasoning tasks, CFG is not needed
+    emu3_cfg_enabled: false
+    emu3_guidance_scale: 0.0   # CFG guidance scale (1.0 = disabled, >1.0 = enabled)
+    
+    # Text sampling params (MUST match inference_vllm_dist.py for consistent results)
+    emu3_text_top_k: 1024       # inference_vllm_dist.py default: 1024
+    emu3_text_top_p: 0.9        # inference_vllm_dist.py default: 0.9
+    emu3_text_temperature: 1.0  # inference_vllm_dist.py default: 1.0
+    
+    # Visual/Image sampling params
+    emu3_visual_top_k: 10240    # inference_vllm_dist.py default: 10240
+    emu3_visual_top_p: 1.0      # inference_vllm_dist.py default: 1.0
+    emu3_visual_temperature: 0.9  # inference_vllm_dist.py default: 1.0
+    
+    image_area: 518400          # Total image area in pixels
+    emu3_max_new_tokens: 10000  # inference_vllm_dist.py uses 15000 for craft, 32768 for vrbench
+    
+    # Global sampling params (MUST match inference_vllm_dist.py)
+    emu3_temperature: 1.0       # inference_vllm_dist.py default: 1.0
+    emu3_top_p: 1.0             # inference_vllm_dist.py default: 1.0
+    emu3_top_k: 131072          # inference_vllm_dist.py default: 131072
+    emu3_vq_path: "${oc.env:UNIVR_SFT_PATH}/weights/Emu3.5-VisionTokenizer"
+    emu3_vq_type: "ibq"
+    
+    # Enable image decoding in rollout worker for reward function
+    # This is REQUIRED because reward worker has no GPU access
+    enable_image_decode_for_reward: true
+    
+    val_override_config:
+      temperature: 0.6
+      top_p: 0.95
+      n: 1
+
+  ref:
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: false
+      enable_rank0_init: true
+    offload:
+      offload_params: true
+
+  reward:
+    reward_function: ./examples/reward_function/emu3.py:compute_score
+    skip_special_tokens: false  # Keep special tokens for Emu3 image format parsing
+    reward_function_kwargs:
+      format_weight: 0.2
+      vlm_weight: 0.7
+      vlm_api_base: "http://<your-vlm-server>/v1"
+      vlm_api_key: "sk-abc123"
+      vlm_model_name: "qwen3vl"
+      enable_vlm_reward: true
+      max_vlm_workers: 256
+      # Debug mode: uncomment to test reward pipeline with GT images
+      # debug_mode: "gt_as_gen"        # GT images as generated → expect score ≈ 1.0
+      # debug_mode: "gt_first_frame"   # GT first frame repeated → expect lower scores
+      # NOTE: vq_path/vq_type/vq_device are NOT used in reward worker
+      # Image decoding happens in rollout worker (which has GPU access)
+      # Make sure 'enable_image_decode_for_reward: true' is set in rollout config
+
+    # Validation reward function override: single-sample VLM evaluation (no pairwise)
+    val_reward_function: ./examples/reward_function/emu3_val.py:compute_score
+    val_reward_function_kwargs:
+      format_weight: 0.3
+      vlm_weight: 0.7
+      vlm_api_base: "http://<your-vlm-server>/v1"
+      vlm_api_key: "sk-abc123"
+      vlm_model_name: "qwen3vl"
+      enable_vlm_reward: true
+      max_vlm_workers: 32
+
+trainer:
+  total_epochs: 10
+  max_steps: null
+  project_name: Emu3_VW_EasyR1_Project
+  experiment_name: emu3_5_grpo
+  logger: ["file", "wandb"]
+  nnodes: 1
+  n_gpus_per_node: 8
+  max_try_make_batch: 20
+  val_freq: 0
+  val_before_train: false
+  val_only: false
+  val_generations_to_log: 3
+  save_freq: 50
+  save_limit: 3
+  save_model_only: false
+  save_checkpoint_path: null
+  load_checkpoint_path: null
