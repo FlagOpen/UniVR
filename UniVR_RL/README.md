@@ -31,10 +31,10 @@ This patch modifies vLLM's `ClassifierFreeGuidanceLogitsForVisualTokenProcessor`
 
 ### VR-X-RL Dataset (UniVR RL Training Data)
 
-Download the VR-X-RL dataset from [maverickrzw/VR-X-SFT-RL](https://huggingface.co/datasets/maverickrzw/VR-X-SFT-RL) and place it under the repo root as `datasets/VR-X-RL/`:
+Download the VR-X-RL dataset from [ByteDance/VR-X-SFT-RL](https://huggingface.co/datasets/ByteDance/VR-X-SFT-RL) and place it under the repo root as `datasets/VR-X-RL/`:
 
 ```bash
-huggingface-cli download maverickrzw/VR-X-SFT-RL --repo-type dataset --local-dir datasets/VR-X-RL
+huggingface-cli download ByteDance/VR-X-SFT-RL --repo-type dataset --local-dir datasets/VR-X-RL
 ```
 
 ```

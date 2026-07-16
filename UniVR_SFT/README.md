@@ -26,10 +26,10 @@ Both modes use **DeepSpeed ZeRO-3** and `torchrun` for distributed multi-node tr
 
 ### VR-X Dataset (UniVR Training Data)
 
-Download the VR-X dataset from [maverickrzw/VR-X-SFT-RL](https://huggingface.co/datasets/maverickrzw/VR-X-SFT-RL) and place it under the repo root as `datasets/VR-X/`:
+Download the VR-X dataset from [ByteDance/VR-X-SFT-RL](https://huggingface.co/datasets/ByteDance/VR-X-SFT-RL) and place it under the repo root as `datasets/VR-X/`:
 
 ```bash
-huggingface-cli download maverickrzw/VR-X-SFT-RL --repo-type dataset --local-dir datasets/VR-X
+huggingface-cli download ByteDance/VR-X-SFT-RL --repo-type dataset --local-dir datasets/VR-X
 ```
 
 ```
@@ -185,8 +185,8 @@ We provide two pretrained UniVR checkpoints ready for inference and RL fine-tuni
 
 | Model | HuggingFace | Best For |
 |---|---|---|
-| **UniVR-34B-Planning** | [maverickrzw/UniVR-34B-Planning](https://huggingface.co/maverickrzw/UniVR-34B-Planning) | Long-horizon planning tasks (robotic manipulation, tool use, multi-step control) |
-| **UniVR-34B-General** | [maverickrzw/UniVR-34B-General](https://huggingface.co/maverickrzw/UniVR-34B-General)| General Tasks |
+| **UniVR-34B-Planning** | [ByteDance/UniVR-34B-Planning](https://huggingface.co/ByteDance/UniVR-34B-Planning) | Long-horizon planning tasks (robotic manipulation, tool use, multi-step control) |
+| **UniVR-34B-General** | [ByteDance/UniVR-34B-General](https://huggingface.co/ByteDance/UniVR-34B-General)| General Tasks |
 
 **UniVR-34B-Planning** is trained exclusively on manipulation and planning data for maximum performance on long-horizon robotic tasks.
 
