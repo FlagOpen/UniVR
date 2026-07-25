@@ -186,7 +186,7 @@ We provide two pretrained UniVR checkpoints ready for inference and RL fine-tuni
 | Model | HuggingFace | Best For |
 |---|---|---|
 | **UniVR-34B-Planning** | [ByteDance/UniVR-34B-Planning](https://huggingface.co/ByteDance/UniVR-34B-Planning) | Long-horizon planning tasks (robotic manipulation, tool use, multi-step control) |
-| **UniVR-34B-General** | [ByteDance/UniVR-34B-General](https://huggingface.co/ByteDance/UniVR-34B-General)| General Tasks |
+| **UniVR-34B-General** | [ByteDance/UniVR-34B-Planning/tree/main/General](https://huggingface.co/ByteDance/UniVR-34B-Planning/tree/main/General)| General Tasks |
 
 **UniVR-34B-Planning** is trained exclusively on manipulation and planning data for maximum performance on long-horizon robotic tasks.
 
